@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+		<meta name="description" content="">
+		<meta name="author" content="">
+		<link rel="icon" href="../../favicon.ico">
+
+		<title>内部订餐系统</title>
+
+		<!-- Bootstrap core CSS -->
+		<!--link href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"-->
+		<link href="/javascripts/bootstrap.min.css" rel="stylesheet">
+
+		<!-- Custom styles for this template -->
+		<link href="/javascripts/starter-template.css" rel="stylesheet">
+		<script src="http://apps.bdimg.com/libs/jquery/2.1.1/jquery.min.js"></script>
+		<script src="http://apps.bdimg.com/libs/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+		<!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+		<!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+		<script src="../../assets/js/ie-emulation-modes-warning.js"></script>
+		<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+		<script src="//cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+		<script src="//cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    <script type="text/javascript">
+			$(document).ready(function(){
+				var username = "<%= username %>";
+				if (username === 'admin') {
+					document.getElementById("people").style.display = "";//显
+				} else {
+					document.getElementById("people").style.display = "none";//隐藏
+				}
+
+				var today = new Date();
+				var year = today.getFullYear();
+				var month = today.getMonth() + 1;
+				var date = today.getDate();
+				var day = today.getDay();
+				var countDay = getMonthDays(month, year);
+				var count = countDay - date + 1;
+				var weekDay = ["星期天", "星期一", "星期二", "星期三", "星期四", "星期五","星期六"];
+				setInterval(getCurrent(), 1000);
+				function getCurrent() {
+					var text;
+          text = (year) + "年" + (month) + "月" + date + "日  " + weekDay[day] + "";
+          $('#currentDate').text(text);
+				}
+
+				function getMonthDays(month, year) {
+					var days;
+					if (month == 2) {
+						if (year % 4 == 0 && year % 100 != 0 || year % 400 == 0) {
+							days = 29;
+						} else {
+							days = 28;
+						}
+					} else if ((month == 1) || (month == 3) || (month == 5) || (month == 7) || (month == 8) || (month == 10) || (month == 12)) {
+						days = 31;
+					} else {
+						days = 30;
+					}
+					return days;
+				}
+
+				//动态定制table的行数
+				$(function() {
+					for (var i = 0; i < count + 1; i++) {
+						htmlStr = '<tr>' +
+							'<td></td>' +
+							'<td></td>' +
+							'<td></td>' +
+							'<td></td>' +
+						'</tr>';
+						$('#ordertable').find('tbody').append(htmlStr);
+					}
+				});
+
+				//填写每一行的内容
+				$(function(){
+					var row = 1;
+					for(var i = date;i < countDay + 1; i++){
+						var text = month.toString();
+						var ddate = i.toString();
+						text = year + "/" + text + "/" + ddate;
+						$($($("#ordertable").find("tr")[row]).find('td')[0]).html(text);
+						var wdate = new Date(text);
+						var week = wdate.getDay();
+						$($($("#ordertable").find("tr")[row]).find('td')[1]).html(weekDay[week]);
+						if(week == 0){
+							var sunTrs = $($("#ordertable").find("tr")[row]).find('td');
+							for (var j = 0; j < sunTrs.length; j++) {
+								$(sunTrs[j]).css("background-color","#bbb");
+							}
+						}
+						var input = "<input type='checkbox' name='lunch' value='"+ddate+"'>";
+						$($($("#ordertable").find("tr")[row]).find('td')[2]).html(input);
+						input = "<input type='checkbox' name='dinner' value='"+ddate+"'>";
+						$($($("#ordertable").find("tr")[row]).find('td')[3]).html(input);
+						row++;
+					}
+				});
+
+				$("#lunchAll").change(function() {
+					if($("#lunchAll").is(':checked')){
+						for(var i = 0; i < count + 1; i++){
+							$("#ordertable").find("td").children().eq(i*4+2).prop("checked", true);
+							$("#ordertable").find("td").children().eq(i*4+0).prop("checked", true);
+						}
+					} else {
+						for(var i = 0; i < count + 1; i++){
+							$("#ordertable").find("td").children().eq(i*4+0).prop("checked", false);
+							$("#ordertable").find("td").children().eq(i*4+2).prop("checked", false);
+						}
+					}
+				});
+
+				$("#dinnerAll").click(function() {
+					if($("#dinnerAll").is(':checked')){
+						for(var i = 0; i < count + 1; i++){
+							$("#ordertable").find("td").children().eq(i*4+1).prop("checked", true);
+							$("#ordertable").find("td").children().eq(i*4+3).prop("checked", true);
+						}
+					} else {
+						for(var i = 0; i < count + 1; i++){
+							$("#ordertable").find("td").children().eq(i*4+1).prop("checked", false);
+							$("#ordertable").find("td").children().eq(i*4+3).prop("checked", false);
+						}
+					}
+				});
+
+				$('#order').click(function() {
+					var data = $('form').serializeArray();
+					data.push({name:"year", value:year});
+					data.push({name:"month", value:month});
+					$.ajax({
+              url:'/home',
+              type:'post',
+              data: data,
+              success: function(data,status){
+                  if(status == 'success'){
+                      alert('提交成功');
+											location.href = 'home';
+                  }
+              },
+              error: function(data,status){
+                  if(status == 'error'){
+											location.href = 'home';
+                  }
+              }
+          });
+				});
+    	});
+		</script>
+
+	</head>
+
+	<body>
+
+		<nav class="navbar navbar-inverse navbar-fixed-top">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand">订餐系统</a>
+				</div>
+				<div id="navbar" class="collapse navbar-collapse">
+					<ul class="nav navbar-nav">
+						<li class="active"><a href="/home">预定</a></li>
+						<li><a href="/search">查询订餐</a></li>
+						<li id="people" style="display: none;"><a href="/searchPeople">查询人员</a></li>
+						<li><a href="/logout">退出</a></li>
+					</ul>
+				</div><!--/.nav-collapse -->
+			</div>
+		</nav>
+
+		<div class="container">
+			<%- message %>
+			<div class="starter-template">
+				<h1>预定</h1>
+				<form role="form" class="form-inline" method="post">
+					<div class="ks">
+						<div class="form-group ">
+							<div id="currentDate" style="font-size:20px"></div>
+						</div>
+						<div class="form-group order">
+							<button type="button" class="btn btn-default btn-lg " id="order">提交</button>
+						</div>
+					</div>
+					<!--/div-->
+					<!--/form-->
+					<table class="table table-striped table-bordered table-hover table-condensed" id="ordertable">
+						<thead>
+							<tr>
+								<th>日期</th>
+								<th>星期</th>
+								<th>午餐 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="lunchAll" id="lunchAll">全选</th>
+								<th>晚餐 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="dinnerAll" id="dinnerAll">全选</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+					<!--form role="form"-->
+				</form>
+			</div>
+
+		</div><!-- /.container -->
+
+
+		<!-- Bootstrap core JavaScript
+		================================================== -->
+		<!-- Placed at the end of the document so the pages load faster -->
+		<!--script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script-->
+		<!--script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script-->
+		<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+		<!--script src="../../assets/js/ie10-viewport-bug-workaround.js"></script-->
+	</body>
+</html>

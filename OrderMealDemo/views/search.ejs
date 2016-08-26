@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+		<meta name="description" content="">
+		<meta name="author" content="">
+		<link rel="icon" href="../../favicon.ico">
+
+		<title>内部订餐系统</title>
+
+		<!-- Bootstrap core CSS -->
+		<!--link href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"-->
+		<link href="/javascripts/bootstrap.min.css" rel="stylesheet">
+		<!-- Custom styles for this template -->
+		<link href="/javascripts/starter-template.css" rel="stylesheet">
+    <link href="/javascripts/jquery.min.js">
+    <script src="http://apps.bdimg.com/libs/jquery/2.1.1/jquery.min.js"></script>
+		<script src="http://apps.bdimg.com/libs/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+		<!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+		<!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+		<script src="../../assets/js/ie-emulation-modes-warning.js"></script>
+		<!-- <script src="./public/order.js"></script> -->
+		<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+		<script src="//cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+		<script src="//cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    <script type="text/javascript">
+			$(document).ready(function(){
+				var username = "<%= username %>";
+				if (username === 'admin') {
+					document.getElementById("people").style.display = "";//显
+				} else {
+					document.getElementById("people").style.display = "none";//隐藏
+				}
+
+				var lunch = "<%= lunch %>";
+				var dinner = "<%= dinner %>";
+				var year = "<%= year %>";
+				var month = "<%= month %>";
+				var lunchArr = lunch.split(',');
+				var dinnerArr = dinner.split(',');
+				var totalArr = [];
+				var weekDay = ["星期天", "星期一", "星期二", "星期三", "星期四", "星期五","星期六"];
+				var count = 0;
+
+				for (var i = 0; i < lunchArr.length; i++) {
+					if (lunchArr[i].length > 0) {
+						totalArr.push(lunchArr[i]);
+					}
+				}
+
+      	var isRepeated;
+      	for (var i = 0; i < dinnerArr.length; i++) {
+					isRepeated = false;
+					for (var j = 0; j < totalArr.length; j++) {
+          	if (totalArr[j] == dinnerArr[i]) {
+            	isRepeated = true;
+              break;
+						}
+         	}
+         	if (!isRepeated && dinnerArr[i].length > 0) {
+					 	totalArr.push(dinnerArr[i]);
+         	}
+     		}
+				count = totalArr.length;
+				if (count == 0) {
+					alert('你还没有进行预订, 请前往预订页面');
+					location.href = '/home';
+					return;
+				}
+
+				//动态定制table的行数
+				$(function() {
+					for (var i = 0; i < count + 1; i++) {
+						htmlStr = '<tr>' +
+							'<td></td>' +
+							'<td></td>' +
+							'<td></td>' +
+							'<td></td>' +
+						'</tr>';
+						$('#tablesearch').find('tbody').append(htmlStr);
+					}
+				});
+
+				//填写每一行的内容
+				$(function(){
+					var row = 1;
+					for(var i = 0; i < count + 1; i++){
+						if (i != count) {
+							var ddate = totalArr[i];
+							text = year + "/" + month + "/" + ddate;
+							$($($("#tablesearch").find("tr")[row]).find('td')[0]).html(text);
+							var wdate = new Date(text);
+							var week = wdate.getDay();
+							$($($("#tablesearch").find("tr")[row]).find('td')[1]).html(weekDay[week]);
+							if(week == 0){
+								var sunTrs = $($("#tablesearch").find("tr")[row]).find('td');
+								for (var j = 0; j < sunTrs.length; j++) {
+									$(sunTrs[j]).css("background-color","#bbb");
+								}
+							}
+							for (var k = 0; k < lunchArr.length; k++) {
+								if (lunchArr[k] == ddate) {
+									$($($("#tablesearch").find("tr")[row]).find('td')[2]).html("&#10004");
+								}
+							}
+
+							for (var t = 0; t < dinner.length; t++) {
+								if (dinnerArr[t] == ddate) {
+									$($($("#tablesearch").find("tr")[row]).find('td')[3]).html("&#10004");
+								}
+							}
+						}
+						row++;
+					}
+				});
+      });
+    </script>
+	</head>
+
+	<body>
+
+		<nav class="navbar navbar-inverse navbar-fixed-top">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand">订餐系统</a>
+				</div>
+				<div id="navbar" class="collapse navbar-collapse">
+					<ul class="nav navbar-nav">
+						<li ><a href="/home">预定</a></li>
+						<li class="active"><a href="/search">查询订餐</a></li>
+            <li id="people" style="display: none;"><a href="/searchPeople">查询人员</a></li>
+						<li><a href="/logout">退出</a></li>
+					</ul>
+				</div><!--/.nav-collapse -->
+			</div>
+		</nav>
+
+		<div class="container">
+			<div class="starter-template">
+				<h1>查询个人订餐情况</h1>
+				<form role="form" class="form-inline">
+					<!--/form-->
+					<table class="table table-striped table-bordered table-hover table-condensed" id="tablesearch">
+						<thead>
+							<tr>
+								<th>日期</th>
+								<th>星期</th>
+								<th>午餐</th>
+								<th>晚餐</th>
+							</tr>
+						</thead>
+						<tbody>
+						</tbody>
+					</table>
+				</form>
+			</div>
+
+		</div><!-- /.container -->
+
+
+		<!-- Bootstrap core JavaScript
+		================================================== -->
+		<!-- Placed at the end of the document so the pages load faster -->
+		<!--script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script-->
+		<!--script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script-->
+		<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+		<!--script src="../../assets/js/ie10-viewport-bug-workaround.js"></script-->
+	</body>
+</html>
